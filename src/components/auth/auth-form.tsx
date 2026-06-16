@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, LineChart } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Logo from "@/components/logo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,9 +45,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
   return (
     <main className="mx-auto flex min-h-[calc(100vh-8rem)] max-w-md flex-col justify-center px-4 py-10">
       <div className="mb-6 text-center">
-        <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--brand)] text-[var(--brand-foreground)]">
-          <LineChart className="h-5 w-5" />
-        </span>
+        <Logo className="mx-auto mb-3 h-11 w-11" id="auth" />
         <h1 className="text-2xl font-bold tracking-tight">
           {isSignup ? "Create your account" : "Welcome back"}
         </h1>
