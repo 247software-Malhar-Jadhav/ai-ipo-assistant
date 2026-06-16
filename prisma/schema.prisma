@@ -39,6 +39,30 @@ enum AiLabel {
   avoid
 }
 
+/// Overall stock-market mood, which influences IPO listing prospects.
+enum MarketSentiment {
+  BULLISH
+  NEUTRAL
+  CAUTIOUS
+  BEARISH
+}
+
+/// A single snapshot of broad market conditions (singleton row id "current").
+/// Used to contextualise IPO rankings — a strong market lifts listing gains,
+/// a weak/volatile one suppresses them.
+model MarketSnapshot {
+  id                  String          @id @default("current")
+  sentiment           MarketSentiment @default(NEUTRAL)
+  niftyChangePct      Float           @default(0) // recent Nifty 50 move %
+  sensexChangePct     Float           @default(0) // recent Sensex move %
+  indiaVix            Float           @default(0) // volatility index
+  recentListingAvgPct Float           @default(0) // avg listing gain of recent IPOs
+  note                String          @default("")
+  updatedAt           DateTime        @updatedAt
+
+  @@map("market_snapshot")
+}
+
 /// An IPO with market data and AI-generated ranking.
 model Ipo {
   id        String    @id @default(cuid())

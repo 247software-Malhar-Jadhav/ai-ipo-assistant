@@ -773,6 +773,7 @@ async function main() {
       aiScore: null,
       aiLabel: null,
       aiReason: null,
+      aiAnalysis: null,
       aiRankedAt: null,
     };
 
@@ -783,8 +784,24 @@ async function main() {
     });
   }
 
+  // Seed the current market snapshot (singleton). Adjust to reflect the real
+  // market, or update it via POST /api/market.
+  const market = {
+    sentiment: "BULLISH" as const,
+    niftyChangePct: 1.1,
+    sensexChangePct: 0.9,
+    indiaVix: 12.4,
+    recentListingAvgPct: 21.5,
+    note: "Indices near record highs with low volatility; recent IPOs have listed with healthy gains, supporting strong demand.",
+  };
+  await prisma.marketSnapshot.upsert({
+    where: { id: "current" },
+    create: { id: "current", ...market },
+    update: market,
+  });
+
   const count = await prisma.ipo.count();
-  console.log(`✓ Done. ${count} IPOs in the database.`);
+  console.log(`✓ Done. ${count} IPOs + market snapshot (${market.sentiment}).`);
 }
 
 main()

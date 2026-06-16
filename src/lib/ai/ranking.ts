@@ -2,6 +2,11 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { heuristicScore, expectedPremiumPct } from "@/lib/ranking-utils";
 import { RANKING_SYSTEM_PROMPT, buildRankingUserPrompt } from "@/lib/ai/prompts";
+import {
+  getMarketSnapshot,
+  marketScoreNudge,
+  type MarketSnapshot,
+} from "@/lib/market";
 import type { Ipo, AiLabel } from "@/types/ipo";
 
 export const RankSchema = z.object({
@@ -32,8 +37,9 @@ function scoreToLabel(score: number): AiLabel {
  * call fails. Produces the same shape as the AI so the rest of the app is
  * identical regardless of whether AI is available.
  */
-export function heuristicRank(ipo: Ipo): RankResult {
-  const score = heuristicScore(ipo);
+export function heuristicRank(ipo: Ipo, market?: MarketSnapshot): RankResult {
+  const nudge = market ? marketScoreNudge(market.sentiment) : 0;
+  const score = Math.max(0, Math.min(10, heuristicScore(ipo) + nudge));
   const label = scoreToLabel(score);
   const premium = expectedPremiumPct(ipo);
   const subs = ipo.subscriptionTimes;
@@ -63,12 +69,16 @@ export function heuristicRank(ipo: Ipo): RankResult {
     score: Math.round(score * 10) / 10,
     label,
     reason,
-    analysis: heuristicAnalysis(ipo, premium),
+    analysis: heuristicAnalysis(ipo, premium, market),
   };
 }
 
 /** Templated fundamental note for the heuristic fallback. */
-function heuristicAnalysis(ipo: Ipo, premium: number): string {
+function heuristicAnalysis(
+  ipo: Ipo,
+  premium: number,
+  market?: MarketSnapshot
+): string {
   const parts: string[] = [];
 
   if (ipo.revenueCr != null && ipo.revenuePrevCr != null && ipo.revenuePrevCr > 0) {
@@ -105,13 +115,29 @@ function heuristicAnalysis(ipo: Ipo, premium: number): string {
       0
     )}% on grey-market activity.`
   );
+  if (market) {
+    parts.push(
+      `A ${market.sentiment.toLowerCase()} market (Nifty ${
+        market.niftyChangePct >= 0 ? "+" : ""
+      }${market.niftyChangePct}%) ${
+        market.sentiment === "BULLISH"
+          ? "supports listing-day demand"
+          : market.sentiment === "BEARISH"
+          ? "could weigh on the listing"
+          : "is a neutral-to-mixed backdrop"
+      }.`
+    );
+  }
   return parts.join(" ");
 }
 
 let warnedNoKey = false;
 
 /** Rank a single IPO via Groq, falling back to the heuristic on any issue. */
-export async function rankIpo(ipo: Ipo): Promise<RankResult> {
+export async function rankIpo(
+  ipo: Ipo,
+  market?: MarketSnapshot
+): Promise<RankResult> {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     if (!warnedNoKey) {
@@ -120,7 +146,7 @@ export async function rankIpo(ipo: Ipo): Promise<RankResult> {
       );
       warnedNoKey = true;
     }
-    return heuristicRank(ipo);
+    return heuristicRank(ipo, market);
   }
 
   try {
@@ -138,13 +164,13 @@ export async function rankIpo(ipo: Ipo): Promise<RankResult> {
 
     const result = await structured.invoke([
       ["system", RANKING_SYSTEM_PROMPT],
-      ["human", buildRankingUserPrompt(ipo)],
+      ["human", buildRankingUserPrompt(ipo, market)],
     ]);
 
     return RankSchema.parse(result);
   } catch (err) {
     console.error(`[ai] ranking failed for ${ipo.symbol}, using fallback:`, err);
-    return heuristicRank(ipo);
+    return heuristicRank(ipo, market);
   }
 }
 
@@ -158,6 +184,7 @@ export async function rankAndPersist(opts?: {
 }): Promise<{ ranked: number; skipped: number }> {
   const { onlyStale = false, maxAgeMs = 1000 * 60 * 60 * 12 } = opts ?? {};
   const ipos = await prisma.ipo.findMany();
+  const market = await getMarketSnapshot();
 
   let ranked = 0;
   let skipped = 0;
@@ -174,7 +201,7 @@ export async function rankAndPersist(opts?: {
       continue;
     }
 
-    const r = await rankIpo(ipo);
+    const r = await rankIpo(ipo, market);
     await prisma.ipo.update({
       where: { id: ipo.id },
       data: {

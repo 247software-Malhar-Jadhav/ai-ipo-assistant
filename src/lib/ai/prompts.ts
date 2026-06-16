@@ -1,4 +1,5 @@
 import type { Ipo } from "@/types/ipo";
+import type { MarketSnapshot } from "@prisma/client";
 import { expectedPremiumPct } from "@/lib/ranking-utils";
 
 export const RANKING_SYSTEM_PROMPT = `You are a careful Indian-markets IPO analyst.
@@ -28,6 +29,11 @@ Also weigh the FUNDAMENTALS when provided — they should nudge the score and ar
 - Growth & profitability: revenue and profit-after-tax growth, EBITDA margin. Loss-making or declining profit is a risk.
 - Returns & leverage: higher RoE/RoCE is good; high debt-to-equity (> ~1) is a risk.
 
+Factor in the CURRENT MARKET when provided. Listing gains track broad sentiment:
+- A BULLISH, low-volatility market lifts demand and listing gains — nudge the score up slightly and say it supports the listing.
+- A CAUTIOUS/BEARISH or high-volatility market can pull even strong IPOs to flat/negative listings — nudge the score down and flag it as a headwind.
+You MUST mention in the analysis how the current market specifically affects THIS IPO's listing prospects.
+
 You must return:
 - score (0-10) and label per the guide above.
 - reason: ONE short sentence (max 30 words), specific to the numbers.
@@ -37,8 +43,20 @@ function fmt(n: number | null | undefined, suffix = ""): string {
   return n == null ? "n/a" : `${n}${suffix}`;
 }
 
-export function buildRankingUserPrompt(ipo: Ipo): string {
+export function buildRankingUserPrompt(
+  ipo: Ipo,
+  market?: MarketSnapshot
+): string {
   const premium = expectedPremiumPct(ipo);
+  const marketBlock = market
+    ? `
+
+Current market:
+- Sentiment: ${market.sentiment}
+- Nifty ${market.niftyChangePct >= 0 ? "+" : ""}${market.niftyChangePct}%, Sensex ${market.sensexChangePct >= 0 ? "+" : ""}${market.sensexChangePct}%, India VIX ${market.indiaVix}
+- Recent IPO listings averaged ${market.recentListingAvgPct >= 0 ? "+" : ""}${market.recentListingAvgPct}% on debut
+- Note: ${market.note}`
+    : "";
   const revGrowth =
     ipo.revenueCr != null && ipo.revenuePrevCr
       ? `${(((ipo.revenueCr - ipo.revenuePrevCr) / ipo.revenuePrevCr) * 100).toFixed(0)}% YoY`
@@ -65,7 +83,7 @@ Fundamentals:
 - Returns/leverage: RoE ${fmt(ipo.roePct, "%")}, RoCE ${fmt(ipo.rocePct, "%")}, D/E ${fmt(ipo.debtToEquity)}
 - Promoter holding: ${fmt(ipo.promoterPrePct, "%")} pre -> ${fmt(ipo.promoterPostPct, "%")} post
 - Strengths: ${ipo.strengths?.length ? ipo.strengths.join("; ") : "n/a"}
-- Risks: ${ipo.risks?.length ? ipo.risks.join("; ") : "n/a"}
+- Risks: ${ipo.risks?.length ? ipo.risks.join("; ") : "n/a"}${marketBlock}
 
 Return score, label, reason and analysis.`;
 }
