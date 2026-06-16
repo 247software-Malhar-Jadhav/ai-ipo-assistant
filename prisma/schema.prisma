@@ -1,0 +1,93 @@
+// AI IPO Assistant — data model
+// Postgres (Docker locally, Supabase/Neon in production).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// A registered user (simple email + password auth).
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  name         String?
+  passwordHash String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  applications Application[]
+
+  @@map("users")
+}
+
+/// Lifecycle of an IPO.
+enum IpoStatus {
+  UPCOMING
+  LIVE
+  CLOSED
+  LISTED
+}
+
+/// AI conviction label for an IPO.
+enum AiLabel {
+  high_conviction
+  good
+  neutral
+  avoid
+}
+
+/// An IPO with market data and AI-generated ranking.
+model Ipo {
+  id        String    @id @default(cuid())
+  name      String
+  symbol    String    @unique
+  sector    String
+  exchange  String // e.g. "NSE", "BSE", "NSE SME"
+
+  priceBandLow  Int
+  priceBandHigh Int
+  lotSize       Int
+  issueSizeCr   Float // total issue size in ₹ crore
+
+  openDate    DateTime
+  closeDate   DateTime
+  listingDate DateTime?
+
+  status IpoStatus @default(UPCOMING)
+
+  // Market sentiment signals used for ranking.
+  gmp               Int     @default(0) // grey market premium (₹)
+  subscriptionTimes Float   @default(0) // total subscription (x times)
+
+  // Cached AI ranking output.
+  aiScore    Float?
+  aiLabel    AiLabel?
+  aiReason   String?
+  aiRankedAt DateTime?
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  applications Application[]
+
+  @@index([status])
+  @@map("ipos")
+}
+
+/// Tracks whether a user has applied to a given IPO.
+model Application {
+  id        String   @id @default(cuid())
+  userId    String
+  ipoId     String
+  applied   Boolean  @default(true)
+  appliedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipo  Ipo  @relation(fields: [ipoId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, ipoId])
+  @@index([userId])
+  @@map("applications")
+}
