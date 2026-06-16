@@ -62,10 +62,46 @@ model Ipo {
   gmp               Int     @default(0) // grey market premium (₹)
   subscriptionTimes Float   @default(0) // total subscription (x times)
 
+  // Subscription breakdown (x times), once bidding is live.
+  qibX    Float @default(0) // Qualified Institutional Buyers
+  niiX    Float @default(0) // Non-Institutional Investors
+  retailX Float @default(0) // Retail Individual Investors
+
+  // Company & business.
+  about String? // short business description
+
+  // Financials (₹ crore) — latest and previous fiscal year.
+  revenueCr       Float? // latest FY revenue
+  revenuePrevCr   Float? // previous FY revenue
+  patCr           Float? // profit after tax, latest FY
+  patPrevCr       Float? // profit after tax, previous FY
+  ebitdaMarginPct Float? // EBITDA margin %
+
+  // Valuation & returns.
+  peRatio      Float? // post-issue P/E
+  industryPe   Float? // industry average P/E (for comparison)
+  roePct       Float? // return on equity / net worth %
+  rocePct      Float? // return on capital employed %
+  debtToEquity Float? // debt-to-equity ratio
+  marketCapCr  Float? // post-issue market cap (₹ crore)
+
+  // Issue structure.
+  freshIssueCr   Float? // fresh issue portion (₹ crore)
+  ofsCr          Float? // offer-for-sale portion (₹ crore)
+  promoterPrePct Float? // promoter holding before issue %
+  promoterPostPct Float? // promoter holding after issue %
+  registrar      String?
+
+  // Qualitative analysis (Postgres scalar lists, default empty).
+  strengths String[]
+  risks     String[]
+  objects   String[] // objects of the issue (use of proceeds)
+
   // Cached AI ranking output.
   aiScore    Float?
   aiLabel    AiLabel?
   aiReason   String?
+  aiAnalysis String? // longer AI analyst note grounded in fundamentals
   aiRankedAt DateTime?
 
   createdAt    DateTime      @default(now())

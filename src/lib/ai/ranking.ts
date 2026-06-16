@@ -8,6 +8,13 @@ export const RankSchema = z.object({
   score: z.number().min(0).max(10),
   label: z.enum(["high_conviction", "good", "neutral", "avoid"]),
   reason: z.string().min(3).max(400),
+  analysis: z
+    .string()
+    .min(10)
+    .max(1200)
+    .describe(
+      "A 3-4 sentence analyst note grounded in the financials, valuation and the key risk."
+    ),
 });
 
 export type RankResult = z.infer<typeof RankSchema>;
@@ -52,7 +59,53 @@ export function heuristicRank(ipo: Ipo): RankResult {
     }. Consider skipping.`;
   }
 
-  return { score: Math.round(score * 10) / 10, label, reason };
+  return {
+    score: Math.round(score * 10) / 10,
+    label,
+    reason,
+    analysis: heuristicAnalysis(ipo, premium),
+  };
+}
+
+/** Templated fundamental note for the heuristic fallback. */
+function heuristicAnalysis(ipo: Ipo, premium: number): string {
+  const parts: string[] = [];
+
+  if (ipo.revenueCr != null && ipo.revenuePrevCr != null && ipo.revenuePrevCr > 0) {
+    const growth = ((ipo.revenueCr - ipo.revenuePrevCr) / ipo.revenuePrevCr) * 100;
+    parts.push(
+      `Revenue ${growth >= 0 ? "grew" : "fell"} ${Math.abs(growth).toFixed(
+        0
+      )}% YoY to ₹${ipo.revenueCr.toLocaleString("en-IN")} Cr` +
+        (ipo.patCr != null
+          ? ` with ${ipo.patCr >= 0 ? "PAT" : "a loss"} of ₹${Math.abs(
+              ipo.patCr
+            ).toLocaleString("en-IN")} Cr`
+          : "") +
+        "."
+    );
+  }
+  if (ipo.peRatio != null && ipo.industryPe != null) {
+    const rich = ipo.peRatio > ipo.industryPe;
+    parts.push(
+      `Priced at ${ipo.peRatio.toFixed(1)}x P/E versus an industry ${ipo.industryPe.toFixed(
+        1
+      )}x — ${rich ? "a premium to peers" : "in line with or below peers"}.`
+    );
+  }
+  if (ipo.roePct != null || ipo.debtToEquity != null) {
+    const bits: string[] = [];
+    if (ipo.roePct != null) bits.push(`RoE ${ipo.roePct.toFixed(0)}%`);
+    if (ipo.debtToEquity != null)
+      bits.push(`debt-to-equity ${ipo.debtToEquity.toFixed(2)}`);
+    parts.push(`${bits.join(", ")}.`);
+  }
+  parts.push(
+    `Implied listing gain is ${premium >= 0 ? "+" : ""}${premium.toFixed(
+      0
+    )}% on grey-market activity.`
+  );
+  return parts.join(" ");
 }
 
 let warnedNoKey = false;
@@ -128,6 +181,7 @@ export async function rankAndPersist(opts?: {
         aiScore: r.score,
         aiLabel: r.label,
         aiReason: r.reason,
+        aiAnalysis: r.analysis,
         aiRankedAt: new Date(),
       },
     });

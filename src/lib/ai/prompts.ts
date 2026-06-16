@@ -23,20 +23,49 @@ Rough scoring anchor by implied listing gain % (then nudge ±1-2 for demand/segm
 
 Labels: 8-10 high_conviction, 6-7.9 good, 4-5.9 neutral, 0-3.9 avoid.
 
-Be balanced, consistent, and never guarantee returns. Keep the reason to ONE short sentence (max 30 words), specific to the numbers given.`;
+Also weigh the FUNDAMENTALS when provided — they should nudge the score and are the basis for your analysis:
+- Valuation: P/E vs the industry P/E (a large premium to peers is a negative; in line/below is a positive).
+- Growth & profitability: revenue and profit-after-tax growth, EBITDA margin. Loss-making or declining profit is a risk.
+- Returns & leverage: higher RoE/RoCE is good; high debt-to-equity (> ~1) is a risk.
+
+You must return:
+- score (0-10) and label per the guide above.
+- reason: ONE short sentence (max 30 words), specific to the numbers.
+- analysis: a 3-4 sentence analyst note grounded in the fundamentals — cover growth/profitability, valuation vs peers, and the single biggest risk. Be objective; never guarantee returns.`;
+
+function fmt(n: number | null | undefined, suffix = ""): string {
+  return n == null ? "n/a" : `${n}${suffix}`;
+}
 
 export function buildRankingUserPrompt(ipo: Ipo): string {
   const premium = expectedPremiumPct(ipo);
+  const revGrowth =
+    ipo.revenueCr != null && ipo.revenuePrevCr
+      ? `${(((ipo.revenueCr - ipo.revenuePrevCr) / ipo.revenuePrevCr) * 100).toFixed(0)}% YoY`
+      : "n/a";
+  const patGrowth =
+    ipo.patCr != null && ipo.patPrevCr
+      ? `${(((ipo.patCr - ipo.patPrevCr) / Math.abs(ipo.patPrevCr)) * 100).toFixed(0)}% YoY`
+      : "n/a";
+
   return `IPO facts:
 - Name: ${ipo.name} (${ipo.symbol})
 - Sector: ${ipo.sector}
 - Exchange/segment: ${ipo.exchange}
 - Status: ${ipo.status}
 - Price band: ₹${ipo.priceBandLow}–₹${ipo.priceBandHigh}
-- Lot size: ${ipo.lotSize}
-- Issue size: ₹${ipo.issueSizeCr} crore
+- Issue size: ₹${ipo.issueSizeCr} crore (fresh ₹${fmt(ipo.freshIssueCr)} cr, OFS ₹${fmt(ipo.ofsCr)} cr)
 - Grey Market Premium: ₹${ipo.gmp} (implied listing gain ${premium.toFixed(1)}%)
-- Subscription: ${ipo.subscriptionTimes}x
+- Subscription: ${ipo.subscriptionTimes}x (QIB ${fmt(ipo.qibX, "x")}, NII ${fmt(ipo.niiX, "x")}, Retail ${fmt(ipo.retailX, "x")})
 
-Return the score (0-10), label, and a one-sentence reason.`;
+Fundamentals:
+- Revenue: ₹${fmt(ipo.revenueCr)} cr (${revGrowth}); PAT: ₹${fmt(ipo.patCr)} cr (${patGrowth})
+- EBITDA margin: ${fmt(ipo.ebitdaMarginPct, "%")}
+- Valuation: P/E ${fmt(ipo.peRatio)} vs industry ${fmt(ipo.industryPe)}; market cap ₹${fmt(ipo.marketCapCr)} cr
+- Returns/leverage: RoE ${fmt(ipo.roePct, "%")}, RoCE ${fmt(ipo.rocePct, "%")}, D/E ${fmt(ipo.debtToEquity)}
+- Promoter holding: ${fmt(ipo.promoterPrePct, "%")} pre -> ${fmt(ipo.promoterPostPct, "%")} post
+- Strengths: ${ipo.strengths?.length ? ipo.strengths.join("; ") : "n/a"}
+- Risks: ${ipo.risks?.length ? ipo.risks.join("; ") : "n/a"}
+
+Return score, label, reason and analysis.`;
 }
