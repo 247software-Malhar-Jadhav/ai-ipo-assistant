@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar, { type NavUser } from "@/components/layout/navbar";
+import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
+import { getCurrentUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "AI IPO Assistant — Discover, rank & track IPOs with AI",
@@ -9,13 +10,12 @@ export const metadata: Metadata = {
     "Find live and upcoming IPOs, get AI-powered conviction scores based on GMP, subscription and fundamentals, track what you've applied to, and get a daily email reminder.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Auth state is wired in once the session layer exists; null = logged out.
-  const user: NavUser = null;
+  const user = await getCurrentUser();
 
   return (
     <html lang="en" suppressHydrationWarning>

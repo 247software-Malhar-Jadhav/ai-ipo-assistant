@@ -1,5 +1,6 @@
 import { listIpos } from "@/lib/ipo-service";
 import DashboardClient from "@/components/ipo/dashboard-client";
+import { getCurrentUser } from "@/lib/auth";
 import type { IpoTab } from "@/types/ipo";
 
 export const dynamic = "force-dynamic";
@@ -22,8 +23,8 @@ export default async function DashboardPage({
   const initialTab: IpoTab =
     tab && VALID_TABS.includes(tab as IpoTab) ? (tab as IpoTab) : "all";
 
-  // Auth wiring (userId) is added with the session layer; null = anonymous.
-  const ipos = await listIpos("all", undefined);
+  const user = await getCurrentUser();
+  const ipos = await listIpos("all", user?.id);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -38,7 +39,7 @@ export default async function DashboardPage({
       <DashboardClient
         initialIpos={ipos}
         initialTab={initialTab}
-        authed={false}
+        authed={!!user}
       />
     </main>
   );
