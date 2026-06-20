@@ -1,0 +1,294 @@
+<title>AI IPO Assistant — How It Works</title>
+<style>
+  :root{
+    --brand:#6366f1; --brand2:#8b5cf6; --ink:#0f172a; --muted:#64748b;
+    --bg:#f8fafc; --card:#ffffff; --border:#e2e8f0; --ok:#16a34a; --warn:#d97706; --bad:#dc2626;
+    --code:#1e293b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.6}
+  .wrap{max-width:880px;margin:0 auto;padding:0 20px}
+  header.hero{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;padding:56px 0 48px}
+  header.hero .wrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+  .logo{width:56px;height:56px;border-radius:16px;background:rgba(255,255,255,.15);
+    display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0}
+  header.hero h1{margin:0;font-size:30px;letter-spacing:-.02em}
+  header.hero p{margin:6px 0 0;opacity:.9;font-size:16px}
+  .pillrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;width:100%}
+  .pill{background:rgba(255,255,255,.15);color:#fff;border-radius:999px;padding:5px 12px;font-size:13px;font-weight:500}
+  section{padding:34px 0;border-bottom:1px solid var(--border)}
+  h2{font-size:22px;letter-spacing:-.01em;margin:0 0 6px;display:flex;align-items:center;gap:10px}
+  h2 .n{width:30px;height:30px;border-radius:9px;background:var(--brand);color:#fff;font-size:14px;
+    display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+  h3{font-size:16px;margin:22px 0 6px}
+  p,li{color:#334155}
+  .lead{font-size:17px;color:#475569}
+  .muted{color:var(--muted)}
+  code{background:#eef2ff;color:#4338ca;padding:2px 6px;border-radius:6px;font-size:13px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  pre{background:var(--code);color:#e2e8f0;padding:16px;border-radius:12px;overflow-x:auto;font-size:13px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.5}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:640px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px}
+  .card h4{margin:0 0 4px;font-size:15px}
+  .card p{margin:0;font-size:14px;color:var(--muted)}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+  th{background:#f1f5f9;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:#475569}
+  .flow{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+  .step{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--border);
+    border-radius:12px;padding:12px 14px}
+  .step .dot{width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;font-size:12px;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+  .step b{display:block}
+  .note{border-left:4px solid var(--brand);background:#eef2ff;padding:12px 16px;border-radius:0 10px 10px 0;margin:14px 0}
+  .warn{border-left:4px solid var(--warn);background:#fffbeb}
+  .ok{color:var(--ok);font-weight:600}.bad{color:var(--bad);font-weight:600}.wn{color:var(--warn);font-weight:600}
+  details{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:4px 16px;margin:10px 0}
+  summary{cursor:pointer;font-weight:600;padding:12px 0;font-size:15px}
+  details[open] summary{border-bottom:1px solid var(--border);margin-bottom:10px}
+  .toc{display:flex;flex-wrap:wrap;gap:8px}
+  .toc a{font-size:13px;text-decoration:none;color:#4338ca;background:#eef2ff;padding:5px 11px;border-radius:999px}
+  .badge{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:600}
+  .b-hc{background:#dcfce7;color:#166534}.b-g{background:#e0e7ff;color:#3730a3}
+  .b-n{background:#f1f5f9;color:#475569}.b-a{background:#fee2e2;color:#991b1b}
+  footer{padding:30px 0;color:var(--muted);font-size:13px;text-align:center}
+</style>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="logo">📈</div>
+    <div>
+      <h1>AI IPO Assistant — How It Works</h1>
+      <p>A plain-English guide to the whole system: data, AI, scoring, auth, email and hosting.</p>
+    </div>
+    <div class="pillrow">
+      <span class="pill">Next.js 15</span>
+      <span class="pill">LangChain + Groq (Llama 3.3 70B)</span>
+      <span class="pill">PostgreSQL + Prisma</span>
+      <span class="pill">JWT auth</span>
+      <span class="pill">Gmail daily reminder</span>
+      <span class="pill">100% free stack</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section>
+    <p class="lead">AI IPO Assistant helps a retail investor decide <b>which IPO to apply to</b>. It lists every live and upcoming IPO, gives each one an <b>AI conviction score (0–10)</b> based on grey-market premium, subscription demand, company fundamentals and the current market mood, lets you track what you've applied to, and emails you a reminder every morning at 10&nbsp;AM.</p>
+    <div class="toc">
+      <a href="#bigpicture">Big picture</a>
+      <a href="#data">Where the data comes from</a>
+      <a href="#ai">How the AI works</a>
+      <a href="#scoring">Scoring &amp; labels</a>
+      <a href="#fundamentals">Fundamentals</a>
+      <a href="#market">Market mood</a>
+      <a href="#auth">Login &amp; security</a>
+      <a href="#applied">Applied tracking</a>
+      <a href="#email">Daily email</a>
+      <a href="#db">Database</a>
+      <a href="#api">API reference</a>
+      <a href="#cost">Cost</a>
+      <a href="#faq">FAQ</a>
+    </div>
+  </section>
+
+  <section id="bigpicture">
+    <h2><span class="n">1</span> The big picture</h2>
+    <p>Everything is one Next.js app (frontend + backend in the same project), talking to a Postgres database. The AI runs on the server, never in the browser, so the API key stays secret.</p>
+    <pre>Browser (you)
+   │  request a page
+   ▼
+Next.js server  ──reads/writes──►  PostgreSQL  (users, IPOs, applications, market mood)
+   │                                    ▲
+   │  needs AI scores                   │ caches scores back
+   ▼                                    │
+LangChain ──► Groq (Llama 3.3 70B) ─────┘   ← writes score + analyst note per IPO
+
+Every morning 10 AM IST:
+Vercel Cron ──► /api/cron/daily-reminder ──► refresh scores ──► email each user via Gmail</pre>
+    <div class="note">Key idea: the AI doesn't run every time you open the page. Scores are <b>computed once and cached</b> in the database on each IPO row, so the dashboard is instant. They're refreshed on demand or by the daily job.</div>
+  </section>
+
+  <section id="data">
+    <h2><span class="n">2</span> Where the data comes from</h2>
+    <p>This is the most important thing to be clear about when someone asks.</p>
+    <h3>Today: curated sample data</h3>
+    <p>The app ships with <b>13 realistic but fictional IPOs</b> (names, sectors, price bands, GMP, subscription, full financials) defined in <code>prisma/seed.ts</code> and loaded into the database with <code>npm run db:seed</code>. The market snapshot (Nifty/Sensex/VIX/sentiment) is seeded the same way. This makes the app <b>fully functional out of the box</b> with no external dependencies — perfect for a demo and for development.</p>
+    <p>Dates are relative to the seed date, so there are always some <b>Live</b>, <b>Upcoming</b> and <b>Closed</b> IPOs to see.</p>
+    <h3>How it becomes "real" data</h3>
+    <p>The app reads IPOs through one service (<code>src/lib/ipo-service.ts</code>) — that's the single seam where a real source plugs in. To go live you'd either:</p>
+    <ul>
+      <li>Feed IPO data from a provider/API or a manual admin form into the same database table, or</li>
+      <li>Add a scheduled job that fetches the day's IPOs (and GMP/subscription) and upserts them — exactly like the seed does.</li>
+    </ul>
+    <p>Nothing else in the app changes: the AI, scoring, dashboard, email all work the same whether the row was seeded or fetched.</p>
+    <div class="note warn"><b>Honest framing for anyone who asks:</b> "The data is currently sample data so the product is fully demonstrable end-to-end. The architecture is built so a live IPO feed drops into one place without touching the AI or UI." That's accurate and it's a strength, not a weakness.</div>
+  </section>
+
+  <section id="ai">
+    <h2><span class="n">3</span> How the AI works</h2>
+    <p>The AI is <b>Groq</b> hosting <b>Meta's Llama 3.3 70B</b> model, called through <b>LangChain</b>. For each IPO the server does this:</p>
+    <div class="flow">
+      <div class="step"><span class="dot">1</span><div><b>Build a prompt</b> with the IPO's facts — price band, GMP &amp; implied listing gain %, subscription (incl. QIB/NII/Retail), financials, valuation, returns, strengths/risks, and the current market mood. (<code>src/lib/ai/prompts.ts</code>)</div></div>
+      <div class="step"><span class="dot">2</span><div><b>Ask for structured output.</b> LangChain forces the model to return clean JSON matching a fixed schema: <code>score</code> (0–10), <code>label</code>, a one-line <code>reason</code>, and a 3–4 sentence <code>analysis</code>. No fragile text parsing. (<code>src/lib/ai/ranking.ts</code>)</div></div>
+      <div class="step"><span class="dot">3</span><div><b>Validate &amp; cache.</b> The result is checked against the schema (with Zod) and saved on the IPO row: <code>aiScore</code>, <code>aiLabel</code>, <code>aiReason</code>, <code>aiAnalysis</code>, <code>aiRankedAt</code>.</div></div>
+    </div>
+    <h3>When does ranking run?</h3>
+    <ul>
+      <li><code>npm run ai:rank</code> — manual, ranks all IPOs.</li>
+      <li><code>POST /api/rank</code> — protected endpoint (re-rank on demand).</li>
+      <li>The <b>daily cron</b> refreshes any IPO whose score is more than 12 hours old before sending emails.</li>
+    </ul>
+    <div class="note"><b>It never breaks if the AI is unavailable.</b> If the Groq key is missing or a call fails, the app falls back to a <b>deterministic heuristic</b> that computes the same score/label/note from the numbers (premium + subscription + fundamentals + market). The rest of the app behaves identically — it just uses math instead of the LLM.</div>
+  </section>
+
+  <section id="scoring">
+    <h2><span class="n">4</span> Scoring &amp; labels</h2>
+    <p>The score is anchored on the <b>implied listing gain</b> (how much the grey-market premium suggests the stock could pop on listing), then adjusted for demand, fundamentals and the market.</p>
+    <table>
+      <tr><th>Implied listing gain (from GMP)</th><th>Score</th><th>Label</th></tr>
+      <tr><td>≥ 25%</td><td>8 – 10</td><td><span class="badge b-hc">High conviction</span></td></tr>
+      <tr><td>15 – 25%</td><td>6 – 8</td><td><span class="badge b-g">Good</span></td></tr>
+      <tr><td>5 – 15%</td><td>4 – 6</td><td><span class="badge b-n">Neutral</span></td></tr>
+      <tr><td>under 5% or negative</td><td>0 – 4</td><td><span class="badge b-a">Avoid</span></td></tr>
+    </table>
+    <p style="margin-top:14px">Adjustments on top of that anchor:</p>
+    <ul>
+      <li><b>Demand</b> — strong subscription (esp. QIB) nudges up; weak/under-subscribed nudges down.</li>
+      <li><b>Fundamentals</b> — rich valuation vs peers, declining profit or high debt pull the score down; strong growth and returns push it up.</li>
+      <li><b>Market mood</b> — a bullish market lifts scores, a weak/volatile one drags them.</li>
+    </ul>
+    <div class="note"><b>Why "Upcoming" IPOs still score well:</b> they haven't opened for bidding, so their subscription is 0. The system explicitly ignores subscription for upcoming IPOs and judges them on premium + fundamentals — otherwise every upcoming IPO would unfairly look weak.</div>
+    <p class="muted" style="font-size:13px">Heuristic formula (the fallback / pre-AI ranking): premium% scaled so ~30% = 10, subscription scaled so ~30× = 10, combined 60/40; upcoming IPOs use premium only; then a market nudge of about +0.8 (bullish) to −1.6 (bearish).</p>
+  </section>
+
+  <section id="fundamentals">
+    <h2><span class="n">5</span> Fundamental analysis</h2>
+    <p>Each IPO detail page shows a full company read-out, and these numbers also feed the AI score and note. This is what makes the verdict defensible rather than just "GMP is high".</p>
+    <div class="grid">
+      <div class="card"><h4>Financials</h4><p>Revenue &amp; profit (latest vs previous year) with YoY growth, EBITDA margin.</p></div>
+      <div class="card"><h4>Valuation</h4><p>P/E vs the industry P/E (flags "premium to peers"), post-issue market cap.</p></div>
+      <div class="card"><h4>Returns &amp; leverage</h4><p>Return on equity, return on capital, debt-to-equity (flags "leveraged").</p></div>
+      <div class="card"><h4>Issue structure</h4><p>Fresh issue vs offer-for-sale, promoter holding before/after, registrar.</p></div>
+      <div class="card"><h4>Demand split</h4><p>QIB / NII / Retail subscription multiples.</p></div>
+      <div class="card"><h4>Qualitative</h4><p>Strengths, risks, and the "objects of the issue" (use of proceeds).</p></div>
+    </div>
+  </section>
+
+  <section id="market">
+    <h2><span class="n">6</span> Market mood — does the market affect IPOs?</h2>
+    <p>Yes, strongly — IPO listing gains track the broad market. The app stores a single <b>market snapshot</b> (sentiment + Nifty/Sensex move + India VIX + recent listing-day average) and:</p>
+    <ul>
+      <li>Shows it as a <b>"Market mood" banner</b> on the dashboard.</li>
+      <li>Feeds it into the AI, which <b>says how the current market affects each IPO</b> in its note (e.g. "the bullish, low-volatility backdrop supports the listing").</li>
+      <li>Nudges every score up (bullish) or down (cautious/bearish).</li>
+    </ul>
+    <p>It's updatable via <code>POST /api/market</code> (protected), and is the natural place to later plug a free live Nifty/VIX feed.</p>
+  </section>
+
+  <section id="auth">
+    <h2><span class="n">7</span> Login &amp; security</h2>
+    <ul>
+      <li>Email + password signup/login. Passwords are <b>hashed with bcrypt</b> — the plain password is never stored.</li>
+      <li>On login the server issues a <b>JWT</b> (signed with a secret) stored in an <b>httpOnly cookie</b> — JavaScript can't read it, which protects against token theft. It lasts 7 days.</li>
+      <li>Browsing IPOs is public; <b>writing</b> (marking applied) requires a valid session. Login errors are deliberately vague ("invalid email or password") so attackers can't tell which emails exist.</li>
+    </ul>
+  </section>
+
+  <section id="applied">
+    <h2><span class="n">8</span> Applied tracking</h2>
+    <p>When you press <b>"Mark as applied"</b>, the app saves a row in the <code>applications</code> table linking your user to that IPO. The dashboard and detail page read it back so your status persists across devices and sessions, and the daily email uses it to remind you only about IPOs you <i>haven't</i> applied to.</p>
+  </section>
+
+  <section id="email">
+    <h2><span class="n">9</span> The daily 10&nbsp;AM email</h2>
+    <div class="flow">
+      <div class="step"><span class="dot">1</span><div><b>Vercel Cron</b> calls <code>/api/cron/daily-reminder</code> at <b>04:30 UTC = 10:00 AM IST</b> (configured in <code>vercel.json</code>). The request carries a secret token so nobody else can trigger it.</div></div>
+      <div class="step"><span class="dot">2</span><div><b>Refresh</b> any stale AI scores so the email is current.</div></div>
+      <div class="step"><span class="dot">3</span><div><b>For each user</b>, build their brief: live IPOs, opening-soon IPOs, the best picks they haven't applied to, and how many they've already applied to.</div></div>
+      <div class="step"><span class="dot">4</span><div><b>Send</b> a clean HTML email via <b>Gmail</b> (using a Gmail App Password). Users with nothing relevant open are skipped.</div></div>
+    </div>
+    <p class="muted" style="font-size:13px">Email is optional — if the Gmail credentials aren't set, the job still refreshes scores and simply skips sending.</p>
+  </section>
+
+  <section id="db">
+    <h2><span class="n">10</span> The database</h2>
+    <p>PostgreSQL, accessed with Prisma (a type-safe ORM). Four tables:</p>
+    <table>
+      <tr><th>Table</th><th>What it holds</th></tr>
+      <tr><td><code>users</code></td><td>Account: email, name, bcrypt password hash.</td></tr>
+      <tr><td><code>ipos</code></td><td>Each IPO: market data, full fundamentals, and the cached AI score/label/reason/analysis.</td></tr>
+      <tr><td><code>applications</code></td><td>Which user applied to which IPO (one row per user+IPO).</td></tr>
+      <tr><td><code>market_snapshot</code></td><td>A single row holding the current market mood + index figures.</td></tr>
+    </table>
+    <p style="margin-top:12px">Locally it runs in <b>Docker</b> (one command: <code>npm run docker:up</code>). In production it's a free cloud Postgres (Neon or Supabase). Same database engine, so behaviour is identical.</p>
+  </section>
+
+  <section id="api">
+    <h2><span class="n">11</span> API reference</h2>
+    <table>
+      <tr><th>Endpoint</th><th>Purpose</th><th>Protected?</th></tr>
+      <tr><td><code>POST /api/auth/signup</code></td><td>Create account + start session</td><td>No</td></tr>
+      <tr><td><code>POST /api/auth/login</code></td><td>Log in</td><td>No</td></tr>
+      <tr><td><code>POST /api/auth/logout</code></td><td>Log out</td><td>No</td></tr>
+      <tr><td><code>GET /api/auth/me</code></td><td>Who am I?</td><td>Cookie</td></tr>
+      <tr><td><code>GET·POST /api/applications</code></td><td>List / toggle applied IPOs</td><td>Login</td></tr>
+      <tr><td><code>POST /api/rank</code></td><td>Re-rank IPOs with the AI</td><td>Secret</td></tr>
+      <tr><td><code>GET·POST /api/market</code></td><td>Read / update market mood</td><td>Read public, write secret</td></tr>
+      <tr><td><code>GET·POST /api/cron/daily-reminder</code></td><td>Send the daily emails</td><td>Secret</td></tr>
+      <tr><td><code>GET /api/health</code></td><td>Is the app + DB up?</td><td>No</td></tr>
+    </table>
+    <p class="muted" style="font-size:13px">"Secret" = requires the <code>CRON_SECRET</code> as a Bearer token, so only the scheduler (or you) can call it.</p>
+  </section>
+
+  <section id="cost">
+    <h2><span class="n">12</span> What it costs: ₹0</h2>
+    <table>
+      <tr><th>Piece</th><th>Service</th><th>Cost</th></tr>
+      <tr><td>AI model</td><td>Groq · Llama 3.3 70B</td><td class="ok">Free tier (no card)</td></tr>
+      <tr><td>Hosting</td><td>Vercel</td><td class="ok">Free hobby tier</td></tr>
+      <tr><td>Database</td><td>Neon / Supabase</td><td class="ok">Free tier</td></tr>
+      <tr><td>Email</td><td>Gmail SMTP</td><td class="ok">Free (App Password)</td></tr>
+      <tr><td>Cron</td><td>Vercel Cron</td><td class="ok">Free (daily)</td></tr>
+    </table>
+  </section>
+
+  <section id="faq">
+    <h2><span class="n">13</span> Questions you might get asked</h2>
+
+    <details><summary>Which AI does it use, and is it free?</summary>
+      <p>Groq running Meta's open Llama 3.3 70B model, called via LangChain. Groq's free tier needs no credit card and is fast (custom inference hardware). The daily limits are plenty for ranking a handful of IPOs once a day.</p></details>
+
+    <details><summary>Is the IPO data real / live?</summary>
+      <p>Right now it's curated <b>sample data</b> so the product is fully demonstrable end to end. The app reads IPOs through a single service, so a live feed or admin entry drops into one place without changing the AI, scoring or UI.</p></details>
+
+    <details><summary>How does it decide a score?</summary>
+      <p>It anchors on the implied listing gain (from grey-market premium), then adjusts for subscription demand, company fundamentals (valuation vs peers, growth, debt, returns) and the overall market mood. The AI writes a short note explaining the verdict; if the AI is unavailable, the same logic runs as a deterministic formula.</p></details>
+
+    <details><summary>Does the overall stock market affect the rankings?</summary>
+      <p>Yes. A "market mood" snapshot (sentiment + Nifty/Sensex/VIX) lifts scores in a bullish market and lowers them in a weak/volatile one, and the AI explicitly states how the current market affects each IPO's listing prospects.</p></details>
+
+    <details><summary>Is my password safe?</summary>
+      <p>Passwords are hashed with bcrypt and never stored in plain text. Sessions use a signed JWT in an httpOnly cookie that JavaScript can't read.</p></details>
+
+    <details><summary>What happens if Groq is down or rate-limited?</summary>
+      <p>Nothing breaks — the app automatically falls back to the heuristic ranker and keeps working. Scores are also cached, so a momentary outage doesn't affect browsing.</p></details>
+
+    <details><summary>How often do scores update?</summary>
+      <p>On demand (a button / endpoint or <code>npm run ai:rank</code>) and automatically each morning before the reminder email — the daily job re-ranks anything older than 12 hours.</p></details>
+
+    <details><summary>Is this investment advice?</summary>
+      <p>No. It's a research and education tool on sample data. Every page carries a disclaimer to verify with the official RHP and SEBI filings before applying.</p></details>
+
+    <details><summary>Why Next.js + Postgres + this stack?</summary>
+      <p>Next.js keeps frontend and backend in one codebase and deploys to Vercel in one click. Postgres + Prisma give reliable, type-safe storage. Everything chosen is free and production-grade.</p></details>
+  </section>
+
+  <footer>
+    AI IPO Assistant · For research and education only — not investment advice.
+  </footer>
+</div>
