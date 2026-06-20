@@ -57,9 +57,12 @@ export default function Navbar({ user }: { user: NavUser }) {
         <div className="hidden items-center gap-2 md:flex">
           {user ? (
             <>
-              <span className="text-sm text-muted-foreground">
+              <Link
+                href="/profile"
+                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
                 {user.name || user.email}
-              </span>
+              </Link>
               <Button variant="ghost" size="sm" onClick={logout}>
                 <LogOut className="h-4 w-4" /> Logout
               </Button>
@@ -104,12 +107,21 @@ export default function Navbar({ user }: { user: NavUser }) {
                 </Link>
               ))}
             {user ? (
-              <button
-                onClick={logout}
-                className="block w-full rounded-md px-3 py-2 text-left text-sm font-medium text-muted-foreground hover:bg-accent"
-              >
-                Logout
-              </button>
+              <>
+                <Link
+                  href="/profile"
+                  onClick={() => setOpen(false)}
+                  className="block rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  Profile
+                </Link>
+                <button
+                  onClick={logout}
+                  className="block w-full rounded-md px-3 py-2 text-left text-sm font-medium text-muted-foreground hover:bg-accent"
+                >
+                  Logout
+                </button>
+              </>
             ) : (
               <div className="flex gap-2 pt-2">
                 <Link href="/login" className="flex-1" onClick={() => setOpen(false)}>

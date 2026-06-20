@@ -37,7 +37,9 @@ async function handle(req: NextRequest) {
     });
   }
 
+  // Only users who haven't opted out of the daily reminder.
   const users = await prisma.user.findMany({
+    where: { emailOptIn: true },
     select: { id: true, email: true, name: true },
   });
 
