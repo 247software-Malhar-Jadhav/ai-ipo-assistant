@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { ingestIpos } from "@/lib/ingest";
 import { rankAndPersist } from "@/lib/ai/ranking";
 import { buildReminderData, hasContent } from "@/lib/reminder";
 import { isEmailConfigured, sendReminderEmail } from "@/lib/email";
@@ -24,7 +25,13 @@ async function handle(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Keep rankings fresh so the email reflects current data.
+  // Pull the latest IPOs, then refresh rankings so the email is current.
+  let ingest: Awaited<ReturnType<typeof ingestIpos>> | { error: string };
+  try {
+    ingest = await ingestIpos();
+  } catch (e) {
+    ingest = { error: e instanceof Error ? e.message : "ingest failed" };
+  }
   const ranking = await rankAndPersist({ onlyStale: true });
 
   if (!isEmailConfigured()) {
@@ -33,6 +40,7 @@ async function handle(req: NextRequest) {
       emailConfigured: false,
       message:
         "GMAIL_USER / GMAIL_APP_PASSWORD not set — skipped sending. Rankings refreshed.",
+      ingest,
       ranking,
     });
   }
@@ -72,6 +80,7 @@ async function handle(req: NextRequest) {
     skipped,
     failed: failures.length,
     failures,
+    ingest,
     ranking,
   });
 }

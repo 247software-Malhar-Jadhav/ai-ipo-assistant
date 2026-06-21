@@ -70,7 +70,7 @@ export default function DashboardClient({
           !q ||
           i.name.toLowerCase().includes(q) ||
           i.symbol.toLowerCase().includes(q) ||
-          i.sector.toLowerCase().includes(q)
+          (i.sector?.toLowerCase().includes(q) ?? false)
       );
   }, [ipos, tab, query]);
 

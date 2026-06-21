@@ -57,7 +57,9 @@ export async function listIpos(
 
   // For "closed" show most recent first instead of by score.
   if (tab === "closed") {
-    result.sort((a, b) => b.closeDate.getTime() - a.closeDate.getTime());
+    result.sort(
+      (a, b) => (b.closeDate?.getTime() ?? 0) - (a.closeDate?.getTime() ?? 0)
+    );
   }
 
   return result;

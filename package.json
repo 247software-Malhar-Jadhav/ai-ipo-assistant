@@ -14,6 +14,7 @@
     "db:studio": "prisma studio",
     "db:reset": "prisma db push --force-reset && npm run db:seed",
     "ai:rank": "tsx scripts/rank.ts",
+    "ingest": "tsx scripts/ingest.ts",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down"
   },

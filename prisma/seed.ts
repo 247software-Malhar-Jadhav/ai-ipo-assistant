@@ -744,6 +744,7 @@ async function main() {
       status: i.status,
       gmp: i.gmp,
       subscriptionTimes: i.subscriptionTimes,
+      source: "seed",
       // Subscription breakdown (x times).
       qibX: i.qibX,
       niiX: i.niiX,

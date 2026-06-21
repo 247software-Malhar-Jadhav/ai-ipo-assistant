@@ -39,7 +39,7 @@ export default function IpoCard({
             </h3>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            {ipo.sector} · {ipo.exchange} · {status.text}
+            {[ipo.sector, ipo.exchange, status.text].filter(Boolean).join(" · ")}
           </p>
         </div>
 
@@ -61,8 +61,15 @@ export default function IpoCard({
 
       {/* Stats grid */}
       <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-        <Stat label="Price band" value={`₹${ipo.priceBandLow}–${ipo.priceBandHigh}`} />
-        <Stat label="Lot size" value={`${ipo.lotSize}`} />
+        <Stat
+          label="Price band"
+          value={
+            ipo.priceBandLow && ipo.priceBandHigh
+              ? `₹${ipo.priceBandLow}–${ipo.priceBandHigh}`
+              : "TBA"
+          }
+        />
+        <Stat label="Lot size" value={ipo.lotSize ? `${ipo.lotSize}` : "TBA"} />
         <Stat
           label="GMP"
           value={
@@ -95,7 +102,7 @@ export default function IpoCard({
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
         <span>Opens {formatDate(ipo.openDate)}</span>
         <span>Closes {formatDate(ipo.closeDate)}</span>
-        <span>Issue {formatCrore(ipo.issueSizeCr)}</span>
+        {ipo.issueSizeCr != null && <span>Issue {formatCrore(ipo.issueSizeCr)}</span>}
       </div>
 
       {/* AI reason */}

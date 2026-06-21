@@ -17,7 +17,10 @@ function toReminderIpo(ipo: Ipo, applied: boolean): ReminderIpo {
     name: ipo.name,
     symbol: ipo.symbol,
     exchange: ipo.exchange,
-    priceBand: `₹${ipo.priceBandLow}–₹${ipo.priceBandHigh}`,
+    priceBand:
+      ipo.priceBandLow && ipo.priceBandHigh
+        ? `₹${ipo.priceBandLow}–₹${ipo.priceBandHigh}`
+        : "TBA",
     closeDate: formatDate(ipo.closeDate),
     gmp: ipo.gmp,
     premiumPct: Math.round(expectedPremiumPct(ipo) * 10) / 10,

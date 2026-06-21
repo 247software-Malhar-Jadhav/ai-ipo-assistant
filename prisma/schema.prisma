@@ -68,24 +68,30 @@ model MarketSnapshot {
 model Ipo {
   id        String    @id @default(cuid())
   name      String
-  symbol    String    @unique
-  sector    String
-  exchange  String // e.g. "NSE", "BSE", "NSE SME"
+  symbol    String    @unique // slug/ticker used as a stable key
+  sector    String? // may be unknown from a live source
+  exchange  String  @default("NSE") // e.g. "NSE", "BSE", "NSE SME"
 
-  priceBandLow  Int
-  priceBandHigh Int
-  lotSize       Int
-  issueSizeCr   Float // total issue size in ₹ crore
+  // Nullable: a live source may not have priced an upcoming IPO yet.
+  priceBandLow  Int?
+  priceBandHigh Int?
+  lotSize       Int?
+  issueSizeCr   Float? // total issue size in ₹ crore
 
-  openDate    DateTime
-  closeDate   DateTime
+  openDate    DateTime?
+  closeDate   DateTime?
   listingDate DateTime?
 
   status IpoStatus @default(UPCOMING)
 
   // Market sentiment signals used for ranking.
   gmp               Int     @default(0) // grey market premium (₹)
+  gmpPct            Float? // GMP as % of issue price (used when price band is unknown)
   subscriptionTimes Float   @default(0) // total subscription (x times)
+
+  // Provenance.
+  source       String? // "ipoguru-api" | "ipoguru-scrape" | "seed"
+  lastSyncedAt DateTime?
 
   // Subscription breakdown (x times), once bidding is live.
   qibX    Float @default(0) // Qualified Institutional Buyers

@@ -71,8 +71,8 @@ Current market:
 - Sector: ${ipo.sector}
 - Exchange/segment: ${ipo.exchange}
 - Status: ${ipo.status}
-- Price band: ₹${ipo.priceBandLow}–₹${ipo.priceBandHigh}
-- Issue size: ₹${ipo.issueSizeCr} crore (fresh ₹${fmt(ipo.freshIssueCr)} cr, OFS ₹${fmt(ipo.ofsCr)} cr)
+- Price band: ${ipo.priceBandLow && ipo.priceBandHigh ? `₹${ipo.priceBandLow}–₹${ipo.priceBandHigh}` : "not priced yet"}
+- Issue size: ${ipo.issueSizeCr != null ? `₹${ipo.issueSizeCr} crore` : "n/a"} (fresh ₹${fmt(ipo.freshIssueCr)} cr, OFS ₹${fmt(ipo.ofsCr)} cr)
 - Grey Market Premium: ₹${ipo.gmp} (implied listing gain ${premium.toFixed(1)}%)
 - Subscription: ${ipo.subscriptionTimes}x (QIB ${fmt(ipo.qibX, "x")}, NII ${fmt(ipo.niiX, "x")}, Retail ${fmt(ipo.retailX, "x")})
 

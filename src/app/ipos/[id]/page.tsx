@@ -53,12 +53,20 @@ export default async function IpoDetailPage({
       : null;
   const hasSubBreakdown = ipo.qibX > 0 || ipo.niiX > 0 || ipo.retailX > 0;
 
+  const minInvestment =
+    ipo.priceBandHigh && ipo.lotSize ? ipo.priceBandHigh * ipo.lotSize : null;
   const keyMetrics = [
-    { label: "Price band", value: `₹${ipo.priceBandLow} – ₹${ipo.priceBandHigh}` },
-    { label: "Lot size", value: `${ipo.lotSize} shares` },
+    {
+      label: "Price band",
+      value:
+        ipo.priceBandLow && ipo.priceBandHigh
+          ? `₹${ipo.priceBandLow} – ₹${ipo.priceBandHigh}`
+          : "TBA",
+    },
+    { label: "Lot size", value: ipo.lotSize ? `${ipo.lotSize} shares` : "TBA" },
     {
       label: "Min. investment",
-      value: `₹${(ipo.priceBandHigh * ipo.lotSize).toLocaleString("en-IN")}`,
+      value: minInvestment ? `₹${minInvestment.toLocaleString("en-IN")}` : "—",
     },
     { label: "Issue size", value: cr(ipo.issueSizeCr) },
     { label: "GMP", value: `₹${ipo.gmp} (${premium >= 0 ? "+" : ""}${premium.toFixed(1)}%)` },
@@ -86,7 +94,7 @@ export default async function IpoDetailPage({
           </div>
           <h1 className="mt-1 text-3xl font-bold tracking-tight">{ipo.name}</h1>
           <p className="mt-1 text-muted-foreground">
-            {ipo.symbol} · {ipo.sector} · {ipo.exchange}
+            {[ipo.symbol, ipo.sector, ipo.exchange].filter(Boolean).join(" · ")}
           </p>
         </div>
         <ApplyButton
