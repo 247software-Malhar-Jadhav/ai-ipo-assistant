@@ -158,3 +158,120 @@ The trade-off is the discipline it forces: **keep state in the database, cache e
 - **Connection pooler** — multiplexes many app connections onto a few real DB connections.
 - **Cron** — a scheduled trigger that runs a function at set times.
 - **Environment variable** — configuration/secret injected at runtime, not stored in code.
+
+---
+
+# 🖥️ Part 2 — Running it WITHOUT serverless
+
+Everything above is the serverless (Vercel) way. The same app can run the **traditional** way: one **always-on server process**. Here's how, and exactly how the two differ.
+
+## 12. The traditional model: one long-running process
+
+Instead of functions that appear per-request, you start **one Node process that runs forever** and handles every request:
+
+```bash
+npm run build      # compile
+npm start          # = `next start` — starts a Node server on port 3000, stays up
+```
+
+That process stays alive, holds memory, keeps a database connection pool open, and waits for requests — exactly the "always-on server" from §2. You host it somewhere that runs a process 24/7.
+
+### Where you'd host it
+- **A VPS / virtual machine** — DigitalOcean Droplet, AWS EC2, Linode, Hetzner. You control the whole box.
+- **A container PaaS** — Render, Railway, Fly.io. You give them a container; they keep it running (a middle ground — managed, but still a long-running process, not per-request functions).
+
+## 13. How to actually do it (VPS recipe)
+
+```bash
+# 1. On an Ubuntu server: install Node 20+, git
+# 2. Get the code + dependencies
+git clone https://github.com/malharjadhav8999/ai-ipo-assistant.git
+cd ai-ipo-assistant
+npm ci
+
+# 3. Configure env (.env file on the box)
+cp .env.example .env          # then fill in real values
+
+# 4. Database: run Postgres right on the same box
+docker compose up -d          # the project's local Postgres
+npm run db:push
+npm run ingest                # load real IPOs
+
+# 5. Build and start
+npm run build
+npm start                     # serves on http://localhost:3000
+```
+
+**Keep it alive** (so it restarts on crash/reboot) with a process manager — PM2:
+```bash
+npm i -g pm2
+pm2 start npm --name ai-ipo -- start
+pm2 startup && pm2 save        # auto-start on reboot
+```
+
+**Put it on the internet with HTTPS** — nginx as a reverse proxy in front of port 3000, with a free Let's Encrypt certificate (`certbot`). nginx forwards `https://yourdomain.com` → `http://localhost:3000`.
+
+**The daily email** — no Vercel Cron here, so use the system scheduler. Add to `crontab`:
+```
+30 4 * * *  curl -X POST http://localhost:3000/api/cron/daily-reminder -H "Authorization: Bearer $CRON_SECRET"
+```
+…or run an in-process scheduler (e.g. `node-cron`) since the process is always alive.
+
+### Or: one Docker image (portable self-hosting)
+Add `output: "standalone"` to `next.config.ts`, then a `Dockerfile` builds a lean image you can run anywhere, and `docker-compose` runs the app **and** Postgres together:
+```yaml
+services:
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/ai_ipo
+      # ...rest of env
+    ports: ["3000:3000"]
+    depends_on: [db]
+  db:
+    image: pgvector/pgvector:pg16
+    environment: { POSTGRES_PASSWORD: postgres, POSTGRES_DB: ai_ipo }
+    volumes: [ "pgdata:/var/lib/postgresql/data" ]
+volumes: { pgdata: {} }
+```
+```bash
+docker compose up -d --build   # whole app + DB, one command, runs forever
+```
+> Want this for real? Say the word and I'll add the `Dockerfile` + `output: "standalone"` so `docker compose up` self-hosts the entire app.
+
+## 14. What changes in THIS app when it's not serverless
+
+Because the process is always alive and stateful, several serverless workarounds become unnecessary:
+
+| Concern | Serverless (now) | Traditional (always-on) |
+| --- | --- | --- |
+| **Database** | Must be external (Neon); needs the **pooled** URL | Postgres can live on the same box; **one persistent connection pool**, no pooler needed |
+| **Caching AI scores** | Must persist to DB (functions forget) | Could keep an **in-memory** cache too (process remembers) — DB cache still nice for restarts |
+| **Refreshing IPO data** | Once-daily Vercel Cron | Can run a **continuous background loop** (e.g. refresh GMP every 15 min) inside the process |
+| **Cold starts** | First request slower | **None** — process is always warm, latency is steady |
+| **Long tasks / websockets** | Hard (timeouts, no persistent socket) | **Easy** — long jobs and live connections are natural |
+
+## 15. Serverless vs traditional — the proper difference
+
+| Dimension | ☁️ Serverless (Vercel) | 🖥️ Traditional server (VPS/PaaS) |
+| --- | --- | --- |
+| **What runs** | Functions, per request, then frozen | One process, always on |
+| **State / memory** | None between requests (stateless) | Persists in RAM while running (stateful) |
+| **Scaling** | Automatic, instant, to zero or to thousands | Manual — you add servers / bigger box / a load balancer |
+| **Cost model** | Pay per request; **$0 when idle** | Pay for the box **24/7**, even idle |
+| **Cost at high constant traffic** | Can get expensive | Usually **cheaper** (fixed box, full utilisation) |
+| **Ops burden** | Almost none (platform handles it) | You patch, monitor, restart, secure the box |
+| **Cold starts** | Yes (first/idle requests) | No |
+| **Filesystem** | Read-only (except `/tmp`) | Full read/write disk |
+| **Background jobs** | Need scheduled triggers (cron) | Run freely in-process |
+| **Long requests / websockets** | Limited (timeouts) | Fully supported |
+| **DB connections** | Many short-lived → needs a pooler | One steady pool |
+| **Deploy** | `git push` → auto build & ship | You build, ship, restart (or via PaaS) |
+| **Best for** | Spiky/low traffic, side projects, zero-ops | Steady heavy traffic, long jobs, full control |
+
+## 16. Which should *you* pick?
+
+- **Serverless (what we did):** ✅ ideal here — bursty/low traffic, free tier, no servers to babysit, one-command deploys. For a portfolio/learning app and a daily-cron product, it's the sweet spot.
+- **Traditional:** choose it when you have **constant heavy traffic** (a fixed box is cheaper), need **always-on background work**, **websockets/streaming**, **long-running compute**, or want **full control** of the machine.
+
+**Rule of thumb:** start serverless; move to (or add) a traditional server only when a specific need — sustained load, long jobs, or live connections — actually shows up. This app could switch to the traditional model with **no code changes** — just a different host, DB location, and scheduler.
