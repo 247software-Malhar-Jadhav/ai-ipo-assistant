@@ -4,7 +4,17 @@
 
 **Built with free tools — no paid services.** 💸 The entire stack (Next.js, Postgres, the Groq LLM, Gmail SMTP, and Vercel hosting/cron) runs on free tiers. No subscription required to run or deploy it.
 
-> ⚠️ **Disclaimer:** This app ships with **sample data** and is intended for **research and educational purposes only**. Nothing here is investment advice. Do your own research before applying to any IPO.
+## 🔗 Links
+
+| | |
+| --- | --- |
+| 🌐 **Live app** | https://ai-ipo-assistant.vercel.app _(deployment target — live once deployed to Vercel)_ |
+| 💻 **Source** | https://github.com/malharjadhav8999/ai-ipo-assistant |
+| 🗄️ **Database** | Neon Postgres · region `ap-southeast-1` · [Neon console](https://console.neon.tech/app/projects/mute-grass-77993581) |
+
+> 🔐 The database **connection string** (with credentials) is **never** stored in this repo — it lives only in the `DATABASE_URL` environment variable. See [`DEPLOYMENT.md`](./DEPLOYMENT.md).
+
+> ⚠️ **Disclaimer:** IPO data is pulled in real time from public sources for **research and educational purposes only**. Nothing here is investment advice. Do your own research before applying to any IPO.
 
 ---
 
